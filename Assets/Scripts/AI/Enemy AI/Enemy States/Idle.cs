@@ -7,18 +7,26 @@ public class Idle : EnemyAIBase
         "according to government recommendations")] 
         private float minDistanceToPlayer = 2f;
 
-    private PlayerMovementController m_Player;
+    [SerializeField,
+        Tooltip("A range between floats on when the entity should wander, " +
+        "to get a more random feeling")] 
+    private Vector2 timeUntilWander;
+
+    private float timer;
 
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        m_Player = GetPlayer(animator);
+        timer = Random.Range(timeUntilWander.x, timeUntilWander.y);
     }
 
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if (Vector3.Distance(m_Player.transform.position, animator.transform.position) <= minDistanceToPlayer)
+        base.OnStateUpdate(animator, stateInfo, layerIndex);
+        timer -= Time.deltaTime;
+
+        if (timer <= 0)
         {
-            animator.SetInteger(Transitions.stateName, (int)Transitions.TransitionToState.MOVEAWAY);
+            animator.SetInteger(Transitions.stateName, (int)Transitions.MovementStates.WANDERAROUND);
         }
     }
 }

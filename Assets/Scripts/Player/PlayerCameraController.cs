@@ -8,14 +8,18 @@ public class PlayerCameraController : MonoBehaviour
     const float OFFSET_MIN = 0f;
     const float OFFSET_MAX = 40f;
 
+    const float MAX_ANGLE = 360f;
+    const float MIN_ANGLE = 1f;
+
     const float e = 0.0001f; //Using e as in epsilon to mark a small positive number
 
-    [SerializeField]
+    [SerializeField,
+        Tooltip("The pivot point of which the camera moves around")]
     private Transform pivotPoint = default;
 
     [SerializeField,
         Tooltip("A point on where the camera uses as a focus point, this object will be in the middle of the screen")]
-    private Transform playerFocusPoint = default;
+    private Transform entityFocusPoint = default;
 
 
     [Header("Camera attributes")]
@@ -32,7 +36,7 @@ public class PlayerCameraController : MonoBehaviour
         Tooltip("The distance between the player and the camera")]
     private float offsetDistance = 20f; //Distance between player and camera
 
-    [SerializeField, Range(OFFSET_MIN, OFFSET_MAX),
+    [SerializeField,
         Tooltip("How fast the camera should snap to target")]
     private float responsivness = 8;
 
@@ -48,11 +52,11 @@ public class PlayerCameraController : MonoBehaviour
     bool invertVerticalCtrls = false;
 
     [Header("Looking")]
-    [SerializeField, Range(1f, 360f), 
+    [SerializeField, Range(MIN_ANGLE, MAX_ANGLE), 
         Tooltip("Mouse sensitivity for X-axis")]
     float XMouseSensitivity = 90f;
 
-    [SerializeField, Range(1f, 360f), 
+    [SerializeField, Range(MIN_ANGLE, MAX_ANGLE), 
         Tooltip("Mouse sensitivity for Y-axis")]
     float YMouseSensitivity = 90f;
 
@@ -81,8 +85,8 @@ public class PlayerCameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         MainCamera = GetComponent<Camera>();
-        focusPoint = playerFocusPoint.position;
-        transform.localRotation = Quaternion.Euler(playerFocusPoint.eulerAngles);
+        focusPoint = entityFocusPoint.position;
+        transform.localRotation = Quaternion.Euler(entityFocusPoint.eulerAngles);
 
         mainPlayerCameraController = this;
     }
@@ -94,7 +98,8 @@ public class PlayerCameraController : MonoBehaviour
 
     private void OnValidate()
     {
-        if (maxVerticalAngle < minVerticalAngle) //Basically clamping the the max and min values of the vertical angle
+        //Clamping the the max and min values of the vertical angle
+        if (maxVerticalAngle < minVerticalAngle) 
         {
             maxVerticalAngle = minVerticalAngle;
         }
@@ -109,7 +114,7 @@ public class PlayerCameraController : MonoBehaviour
     {
         UpdateFocusPoint();
 
-        ReadMouseInputForCameraRotation(); //We only need to constraint the angles if they been changed, so we check for that
+        ReadMouseInputForCameraRotation(); 
 
         ConstraintAngles();
 
@@ -145,7 +150,7 @@ public class PlayerCameraController : MonoBehaviour
 
     void ReadMouseInputForCameraRotation()
     {
-        input.x = invertVerticalCtrls ? -Input.GetAxis("Mouse Y") * XMouseSensitivity : Input.GetAxis("Mouse Y") * XMouseSensitivity;
+        input.x = invertVerticalCtrls ? Input.GetAxis("Mouse Y") * XMouseSensitivity : -Input.GetAxis("Mouse Y") * XMouseSensitivity;
         input.y = invertHorizontalCtrls ? -Input.GetAxis("Mouse X") * YMouseSensitivity : Input.GetAxis("Mouse X") * YMouseSensitivity;
 
         if (input.x < -e || input.x > e || input.y < -e || input.y > e) //here we check for movement from the mouse
@@ -158,13 +163,13 @@ public class PlayerCameraController : MonoBehaviour
     {
         orbitAngles.x = Mathf.Clamp(orbitAngles.x, minVerticalAngle, maxVerticalAngle);
 
-        if (orbitAngles.y < 0f) //Making sure the vertical angles stays within the 0-360 range and not exceeding that
+        if (orbitAngles.y < MIN_ANGLE) //Making sure the vertical angles stays within the 0-360 range and not exceeding that
         {
-            orbitAngles.y += 360f;
+            orbitAngles.y += MAX_ANGLE;
         }
-        else if (orbitAngles.y > 360f)
+        else if (orbitAngles.y > MAX_ANGLE)
         {
-            orbitAngles.y -= 360f;
+            orbitAngles.y -= MAX_ANGLE;
         }
     }
 
@@ -182,6 +187,6 @@ public class PlayerCameraController : MonoBehaviour
 
     public void SetCameraPositionBehindPlayer()
     {
-        orbitAngles = new Vector2(15f, playerFocusPoint.eulerAngles.y);
+        orbitAngles = new Vector2(15f, entityFocusPoint.eulerAngles.y);
     }
 }
